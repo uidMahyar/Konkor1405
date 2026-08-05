@@ -56,6 +56,11 @@
         <span class="field-hint">رشته: علوم انسانی</span>
       </div>
 
+      <label class="field">
+        <span class="field-label">مدت زمان آزمون (دقیقه)</span>
+        <input id="exam-duration" type="number" class="input" min="0" step="1" inputmode="numeric" placeholder="مثلاً ۹۰ — خالی بذار یعنی بدون محدودیت زمانی">
+      </label>
+
       <div class="field">
         <div class="subjects-head">
           <span class="field-label">دروس و ضرایب</span>
@@ -88,6 +93,12 @@
       </div>
       <button class="btn-icon" id="btn-edit-setup" aria-label="ویرایش تنظیمات آزمون">⚙</button>
     </header>
+
+    <div id="sheet-timer" class="sheet-timer" hidden role="timer" aria-label="زمان باقی‌مانده آزمون">
+      <span class="sheet-timer-icon">⏱</span>
+      <span class="sheet-timer-value" id="sheet-timer-value">۰۰:۰۰</span>
+      <span class="sheet-timer-reset-hint">لمس برای ریست</span>
+    </div>
 
     <div class="bulkfill">
       <input id="bulk-input" type="text" class="input input-mono" placeholder="پرکردن سریع، مثلاً 34102341 یا 1.3, 2.4, 3.1" inputmode="text" autocomplete="off">
