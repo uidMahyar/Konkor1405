@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>پاسخ‌برگ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400..700&family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ================= HOME ================= -->
+  <section id="screen-home" class="screen active">
+    <header class="topbar">
+      <h1 class="brand">پاسخ‌برگ<span class="brand-mark">دفتر تصحیح آزمون‌های کنکور</span></h1>
+    </header>
+
+    <div class="home-body">
+      <button id="btn-new-exam" class="btn btn-primary btn-block">
+        <span class="btn-plus">＋</span> آزمون جدید
+      </button>
+
+      <div id="exam-list" class="exam-list"><!-- filled by JS --></div>
+
+      <p id="empty-state" class="empty-state" hidden>
+        هنوز آزمونی ثبت نشده. با «آزمون جدید» شروع کن.
+      </p>
+    </div>
+  </section>
+
+  <!-- ================= SETUP ================= -->
+  <section id="screen-setup" class="screen">
+    <header class="topbar topbar-nav">
+      <button class="btn-icon" data-nav="home" aria-label="بازگشت">‹</button>
+      <h2 class="screen-title">آزمون جدید</h2>
+      <span class="topbar-spacer"></span>
+    </header>
+
+    <div class="setup-body">
+      <label class="field">
+        <span class="field-label">نام آزمون</span>
+        <input id="exam-name" type="text" class="input" placeholder="مثلاً آزمون جامع شماره ۴">
+      </label>
+
+      <div class="field">
+        <span class="field-label">نوع آزمون</span>
+        <div id="exam-type-tabs" class="type-tabs">
+          <button class="type-tab" data-type="sarasari">سراسری</button>
+          <button class="type-tab" data-type="farhangian">فرهنگیان</button>
+          <button class="type-tab" data-type="zaban">زبان</button>
+        </div>
+        <span class="field-hint">رشته: علوم انسانی</span>
+      </div>
+
+      <div class="field">
+        <div class="subjects-head">
+          <span class="field-label">دروس و ضرایب</span>
+          <span class="field-hint">تعداد سوال هر درس رو بزن؛ صفر یا خالی یعنی اون درس تو این آزمون نیست</span>
+        </div>
+        <div class="subjects-table" id="subjects-table" role="table">
+          <div class="subjects-row subjects-row-head" role="row">
+            <span role="columnheader">درس</span>
+            <span role="columnheader">ضریب</span>
+            <span role="columnheader">تعداد سوال</span>
+          </div>
+          <div id="subjects-rows"><!-- filled by JS --></div>
+        </div>
+        <div class="subjects-total">
+          مجموع سوالات: <strong id="subjects-total-count">۰</strong>
+        </div>
+      </div>
+
+      <button id="btn-start-sheet" class="btn btn-primary btn-block">شروع پاسخنامه</button>
+    </div>
+  </section>
+
+  <!-- ================= SHEET (answers / key, shared) ================= -->
+  <section id="screen-sheet" class="screen">
+    <header class="topbar topbar-nav">
+      <button class="btn-icon" data-nav="home" aria-label="بازگشت به خانه">‹</button>
+      <div class="screen-title-wrap">
+        <h2 class="screen-title" id="sheet-title">ثبت پاسخ‌ها</h2>
+        <span class="screen-subtitle" id="sheet-exam-name"></span>
+      </div>
+      <button class="btn-icon" id="btn-edit-setup" aria-label="ویرایش تنظیمات آزمون">⚙</button>
+    </header>
+
+    <div class="bulkfill">
+      <input id="bulk-input" type="text" class="input input-mono" placeholder="پرکردن سریع، مثلاً 34102341 یا 1.3, 2.4, 3.1" inputmode="text" autocomplete="off">
+      <button id="btn-bulk-apply" class="btn btn-secondary">اعمال</button>
+    </div>
+    <p class="bulk-hint">رقم پشت‌سرهم برای هر سوال (۰=بی‌پاسخ) یا فرمت «شماره‌سوال.گزینه» — هرکدوم راحت‌تری</p>
+
+    <div id="sheet-grid" class="sheet-grid"><!-- filled by JS, grouped by subject --></div>
+
+    <div class="sheet-footer">
+      <button id="btn-sheet-back" class="btn btn-ghost">قبلی</button>
+      <button id="btn-sheet-next" class="btn btn-primary">بعدی</button>
+    </div>
+  </section>
+
+  <!-- ================= RESULTS ================= -->
+  <section id="screen-results" class="screen">
+    <header class="topbar topbar-nav">
+      <button class="btn-icon" data-nav="home" aria-label="بازگشت به خانه">‹</button>
+      <div class="screen-title-wrap">
+        <h2 class="screen-title">کارنامه</h2>
+        <span class="screen-subtitle" id="results-exam-name"></span>
+      </div>
+      <span class="topbar-spacer"></span>
+    </header>
+
+    <div class="results-body">
+      <div class="overall-card">
+        <span class="overall-label">نمره کل وزنی</span>
+        <span class="overall-score" id="overall-score">—</span>
+        <span class="overall-note">تخمینی بر پایه ضرایب دروس؛ تراز رسمی سنجش نیست</span>
+      </div>
+
+      <div id="results-list" class="results-list"><!-- filled by JS --></div>
+
+      <div class="results-actions">
+        <button id="btn-edit-answers" class="btn btn-ghost">ویرایش پاسخ‌ها</button>
+        <button id="btn-edit-key" class="btn btn-ghost">ویرایش کلید</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
