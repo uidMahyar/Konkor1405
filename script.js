@@ -78,10 +78,60 @@ let exams = loadExams();
 let currentExamId = null;
 let sheetMode = 'answers'; // 'answers' | 'key'
 let editingExisting = false;
+let timerInterval = null;
 
 function getCurrentExam() {
   return exams.find(e => e.id === currentExamId) || null;
 }
+
+/* ============================================================
+   Sheet countdown timer
+   ============================================================ */
+function stopTimerInterval() {
+  if (timerInterval) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+}
+
+function formatTimer(ms) {
+  const totalSec = Math.max(0, Math.ceil(ms / 1000));
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  return faNum(String(m).padStart(2, '0')) + ':' + faNum(String(s).padStart(2, '0'));
+}
+
+function updateTimerDisplay() {
+  const exam = getCurrentExam();
+  const wrap = document.getElementById('sheet-timer');
+  const valueEl = document.getElementById('sheet-timer-value');
+  if (!exam || !exam.durationMinutes || !exam.timerStartedAt) return;
+
+  const totalMs = exam.durationMinutes * 60 * 1000;
+  const remaining = totalMs - (Date.now() - exam.timerStartedAt);
+
+  if (remaining <= 0) {
+    valueEl.textContent = '۰۰:۰۰';
+    wrap.classList.add('expired');
+    wrap.classList.remove('warning');
+    stopTimerInterval();
+    return;
+  }
+  valueEl.textContent = formatTimer(remaining);
+  wrap.classList.toggle('warning', remaining <= 60000);
+}
+
+document.getElementById('sheet-timer').addEventListener('click', () => {
+  const exam = getCurrentExam();
+  if (!exam || !exam.durationMinutes) return;
+  if (!confirm(`تایمر از اول شروع بشه (${faNum(exam.durationMinutes)} دقیقه)؟`)) return;
+  exam.timerStartedAt = Date.now();
+  saveExams();
+  document.getElementById('sheet-timer').classList.remove('expired', 'warning');
+  stopTimerInterval();
+  updateTimerDisplay();
+  timerInterval = setInterval(updateTimerDisplay, 1000);
+});
 
 /* ============================================================
    Navigation
@@ -94,6 +144,7 @@ function showScreen(id) {
 
 document.querySelectorAll('[data-nav="home"]').forEach(btn => {
   btn.addEventListener('click', () => {
+    stopTimerInterval();
     renderExamList();
     showScreen('screen-home');
   });
@@ -195,9 +246,11 @@ function defaultExamName() {
 
 function openSetup(existingExam) {
   const nameInput = document.getElementById('exam-name');
+  const durationInput = document.getElementById('exam-duration');
   if (existingExam) {
     editingExisting = true;
     nameInput.value = existingExam.name;
+    durationInput.value = existingExam.durationMinutes || '';
     setupType = existingExam.type;
     setupSubjects = SUBJECT_PRESETS[existingExam.type].subjects.map(s => {
       const match = existingExam.subjects.find(es => es.name === s.name);
@@ -206,6 +259,7 @@ function openSetup(existingExam) {
   } else {
     editingExisting = false;
     nameInput.value = defaultExamName();
+    durationInput.value = '';
     setupType = 'sarasari';
     setupSubjects = SUBJECT_PRESETS.sarasari.subjects.map(s => ({ ...s, count: 0 }));
   }
@@ -268,6 +322,8 @@ document.getElementById('btn-start-sheet').addEventListener('click', () => {
     return;
   }
   const name = document.getElementById('exam-name').value.trim() || defaultExamName();
+  const durationRaw = document.getElementById('exam-duration').value;
+  const durationMinutes = Math.max(0, Math.floor(Number(normalizeDigits(durationRaw))) || 0);
 
   let cursor = 1;
   const subjectsWithRange = active.map(s => {
@@ -289,6 +345,10 @@ document.getElementById('btn-start-sheet').addEventListener('click', () => {
     exam.name = name;
     exam.type = setupType;
     exam.subjects = subjectsWithRange;
+    if (exam.durationMinutes !== durationMinutes) {
+      exam.durationMinutes = durationMinutes;
+      exam.timerStartedAt = null; // duration changed — clock restarts fresh next time the sheet opens
+    }
   } else {
     const exam = {
       id: 'exam_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
@@ -298,6 +358,8 @@ document.getElementById('btn-start-sheet').addEventListener('click', () => {
       subjects: subjectsWithRange,
       answers: {},
       key: {},
+      durationMinutes,
+      timerStartedAt: null,
     };
     exams.push(exam);
     currentExamId = exam.id;
@@ -325,6 +387,21 @@ function renderSheet() {
   document.getElementById('btn-sheet-back').textContent = sheetMode === 'answers' ? 'بازگشت' : 'مرحله قبل';
   document.getElementById('btn-sheet-next').textContent = sheetMode === 'answers' ? 'بعدی: ثبت کلید' : 'مشاهده کارنامه';
   document.getElementById('bulk-input').value = '';
+
+  stopTimerInterval();
+  const timerWrap = document.getElementById('sheet-timer');
+  if (sheetMode === 'answers' && exam.durationMinutes > 0) {
+    if (!exam.timerStartedAt) {
+      exam.timerStartedAt = Date.now();
+      saveExams();
+    }
+    timerWrap.hidden = false;
+    timerWrap.classList.remove('expired', 'warning');
+    updateTimerDisplay();
+    timerInterval = setInterval(updateTimerDisplay, 1000);
+  } else {
+    timerWrap.hidden = true;
+  }
 
   const grid = document.getElementById('sheet-grid');
   grid.innerHTML = '';
