@@ -409,6 +409,20 @@ button, input {
 }
 .overall-note { font-size: 11.5px; opacity: 0.65; }
 
+.overall-totals {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  font-size: 13.5px;
+  font-variant-numeric: tabular-nums;
+  padding: 6px 0 2px;
+}
+.overall-total-item { display: flex; align-items: center; gap: 4px; opacity: 0.9; }
+.overall-total-item b { font-weight: 700; font-size: 15px; }
+.overall-total-item.correct { color: #7fd9a0; }
+.overall-total-item.wrong { color: #e39aa4; }
+.overall-total-item.blank { color: var(--paper-raised); opacity: 0.75; }
+
 .results-list { display: flex; flex-direction: column; gap: 12px; }
 
 .result-card {
