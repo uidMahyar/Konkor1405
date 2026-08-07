@@ -79,13 +79,50 @@ let currentExamId = null;
 let sheetMode = 'answers'; // 'answers' | 'key'
 let editingExisting = false;
 let timerInterval = null;
+let bellWatcherInterval = null;
+let endBellAudio = null;
 
 function getCurrentExam() {
   return exams.find(e => e.id === currentExamId) || null;
 }
 
 /* ============================================================
-   Sheet countdown timer
+   End-of-exam bell — رینگ زنگ پایان آزمون
+   مستقل از صفحه‌ی فعلی: از لحظه‌ی باز شدن اپ، هر ثانیه چک می‌کنه
+   آیا آزمونی که تایمرش روشنه به پایان زمانش رسیده یا نه، صرف نظر
+   از این‌که کاربر الان تو کدوم صفحه‌ست (پاسخنامه، کارنامه، خونه...)
+   ============================================================ */
+function playEndBell() {
+  try {
+    if (!endBellAudio) endBellAudio = new Audio('sound/end.mp3');
+    endBellAudio.currentTime = 0;
+    endBellAudio.play().catch(() => { /* پخش خودکار بلاک شد — کاربر باید یه بار با صفحه تعامل کرده باشه */ });
+  } catch (e) { /* پخش صدا در دسترس نیست — نادیده گرفته می‌شه */ }
+}
+
+function checkExamsForExpiry() {
+  const now = Date.now();
+  let anyChanged = false;
+  exams.forEach(exam => {
+    if (!exam.durationMinutes || !exam.timerStartedAt || exam.bellPlayed) return;
+    const totalMs = exam.durationMinutes * 60 * 1000;
+    if (now - exam.timerStartedAt >= totalMs) {
+      exam.bellPlayed = true;
+      anyChanged = true;
+      playEndBell();
+    }
+  });
+  if (anyChanged) saveExams();
+}
+
+function startBellWatcher() {
+  if (bellWatcherInterval) return;
+  checkExamsForExpiry();
+  bellWatcherInterval = setInterval(checkExamsForExpiry, 1000);
+}
+
+/* ============================================================
+   Sheet countdown timer (نمایش عددی — فقط وقتی صفحه‌ی پاسخنامه بازه)
    ============================================================ */
 function stopTimerInterval() {
   if (timerInterval) {
@@ -126,6 +163,7 @@ document.getElementById('sheet-timer').addEventListener('click', () => {
   if (!exam || !exam.durationMinutes) return;
   if (!confirm(`تایمر از اول شروع بشه (${faNum(exam.durationMinutes)} دقیقه)؟`)) return;
   exam.timerStartedAt = Date.now();
+  exam.bellPlayed = false;
   saveExams();
   document.getElementById('sheet-timer').classList.remove('expired', 'warning');
   stopTimerInterval();
@@ -348,6 +386,7 @@ document.getElementById('btn-start-sheet').addEventListener('click', () => {
     if (exam.durationMinutes !== durationMinutes) {
       exam.durationMinutes = durationMinutes;
       exam.timerStartedAt = null; // duration changed — clock restarts fresh next time the sheet opens
+      exam.bellPlayed = false;
     }
   } else {
     const exam = {
@@ -360,6 +399,7 @@ document.getElementById('btn-start-sheet').addEventListener('click', () => {
       key: {},
       durationMinutes,
       timerStartedAt: null,
+      bellPlayed: false,
     };
     exams.push(exam);
     currentExamId = exam.id;
@@ -393,6 +433,7 @@ function renderSheet() {
   if (sheetMode === 'answers' && exam.durationMinutes > 0) {
     if (!exam.timerStartedAt) {
       exam.timerStartedAt = Date.now();
+      exam.bellPlayed = false;
       saveExams();
     }
     timerWrap.hidden = false;
@@ -534,7 +575,14 @@ function computeResults(exam) {
   const coefSum = graded.reduce((s, x) => s + x.coef, 0);
   const overall = coefSum > 0 ? graded.reduce((s, x) => s + x.pct * x.coef, 0) / coefSum : null;
 
-  return { perSubject, overall };
+  const totals = perSubject.reduce((acc, s) => {
+    acc.correct += s.correct;
+    acc.wrong += s.wrong;
+    acc.blank += s.blank;
+    return acc;
+  }, { correct: 0, wrong: 0, blank: 0 });
+
+  return { perSubject, overall, totals };
 }
 
 function renderResults() {
@@ -542,10 +590,14 @@ function renderResults() {
   if (!exam) return;
   document.getElementById('results-exam-name').textContent = exam.name;
 
-  const { perSubject, overall } = computeResults(exam);
+  const { perSubject, overall, totals } = computeResults(exam);
 
   const scoreEl = document.getElementById('overall-score');
   scoreEl.textContent = overall === null ? '—' : faNum(overall.toFixed(1)) + '٪';
+
+  document.getElementById('overall-total-correct').textContent = faNum(totals.correct);
+  document.getElementById('overall-total-wrong').textContent = faNum(totals.wrong);
+  document.getElementById('overall-total-blank').textContent = faNum(totals.blank);
 
   const list = document.getElementById('results-list');
   list.innerHTML = '';
@@ -650,3 +702,4 @@ document.getElementById('btn-edit-key').addEventListener('click', () => {
    ============================================================ */
 renderExamList();
 showScreen('screen-home');
+startBellWatcher();
