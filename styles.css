@@ -16,6 +16,10 @@
   --correct: #3f6b4f;
   --wrong: #7d2230;
   --blank: #c9971f;
+  --practice-progress: #c99a3a;
+  --practice-progress-bg: #f4e6c8;
+  --practice-progress-ink: #7a5314;
+  --practice-complete: #2a4d73;
   --radius-s: 6px;
   --radius-m: 10px;
   --shadow-card: 0 1px 2px rgba(31, 51, 80, 0.06), 0 1px 0 rgba(31, 51, 80, 0.04);
@@ -76,6 +80,13 @@ button, input {
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+.brand-logo {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  object-fit: contain;
 }
 
 .brand-mark {
@@ -206,6 +217,19 @@ button, input {
   cursor: pointer;
 }
 .exam-card-del:hover { background: var(--line-soft); color: var(--seal); }
+
+.exam-card-edit {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--ink-soft);
+  font-size: 15px;
+  cursor: pointer;
+}
+.exam-card-edit:hover { background: var(--line-soft); color: var(--navy); }
 
 .empty-state {
   text-align: center;
@@ -477,6 +501,100 @@ button, input {
 .results-actions { display: flex; flex-direction: column; gap: 10px; padding-top: 4px; }
 .results-actions-row { display: flex; gap: 10px; }
 .results-actions-row .btn { flex: 1; }
+
+/* ============================================================
+   Practice sheet — برگه تمرین
+   شبکه‌ی دوستونی از دروس؛ هر درس بین سه حالت جابه‌جا می‌شه:
+   خنثی → در حال تمرین (کهربایی) → تکمیل (لاجوردی)
+   ============================================================ */
+.practice-body { padding: 20px; display: flex; flex-direction: column; gap: 18px; }
+
+.practice-legend {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+.practice-legend-item { display: flex; align-items: center; gap: 6px; }
+.practice-legend-dot { width: 10px; height: 10px; border-radius: 50%; border: 1px solid var(--line); }
+.practice-legend-dot.progress { background: var(--practice-progress); border-color: var(--practice-progress); }
+.practice-legend-dot.complete { background: var(--practice-complete); border-color: var(--practice-complete); }
+
+.practice-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.practice-card {
+  grid-column: span 1;
+  background: var(--paper-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-m);
+  padding: 14px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: background 0.25s ease, border-color 0.25s ease;
+}
+.practice-card.span-full { grid-column: 1 / -1; }
+
+.practice-card-top { display: flex; flex-direction: column; gap: 6px; }
+.practice-card-name-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 6px; }
+.practice-card-name { font-weight: 700; font-size: 14px; line-height: 1.4; }
+.practice-card-icon { font-size: 15px; opacity: 0; transform: scale(0.6); transition: opacity 0.2s ease, transform 0.2s ease; }
+.practice-card-coef {
+  align-self: flex-start;
+  font-size: 10.5px;
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  border-radius: 20px;
+  padding: 1px 8px;
+  font-weight: 600;
+}
+
+.practice-card-actions { display: flex; gap: 6px; }
+.practice-btn {
+  flex: 1;
+  padding: 8px 4px;
+  border-radius: var(--radius-s);
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink-soft);
+  font-family: 'Vazirmatn', sans-serif;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* حالت «در حال تمرین» — کهربایی/زعفرانی، گرم و فعال */
+.practice-card.state-progress {
+  background: var(--practice-progress-bg);
+  border-color: var(--practice-progress);
+}
+.practice-card.state-progress .practice-card-coef { border-color: var(--practice-progress-ink); color: var(--practice-progress-ink); }
+.practice-card.state-progress .practice-card-icon.icon-progress { opacity: 1; transform: scale(1); color: var(--practice-progress-ink); }
+.practice-btn.btn-progress.is-active {
+  background: var(--practice-progress);
+  border-color: var(--practice-progress);
+  color: var(--practice-progress-ink);
+}
+
+/* حالت «تکمیل» — لاجوردی عمیق */
+.practice-card.state-complete {
+  background: var(--practice-complete);
+  border-color: var(--practice-complete);
+}
+.practice-card.state-complete .practice-card-name,
+.practice-card.state-complete .practice-card-icon.icon-complete { color: var(--paper-raised); }
+.practice-card.state-complete .practice-card-icon.icon-complete { opacity: 1; transform: scale(1); }
+.practice-card.state-complete .practice-card-coef { border-color: rgba(255,255,255,0.5); color: var(--paper-raised); }
+.practice-card.state-complete .practice-btn { border-color: rgba(255,255,255,0.35); color: rgba(255,255,255,0.75); }
+.practice-btn.btn-complete.is-active {
+  background: var(--paper-raised);
+  border-color: var(--paper-raised);
+  color: var(--practice-complete);
+}
 
 /* ============================================================
    Review (per-question answer list — same qrow/opt layout as the
