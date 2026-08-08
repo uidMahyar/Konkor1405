@@ -38,6 +38,8 @@ const SUBJECT_PRESETS = {
     label: 'زبان',
     subjects: [
       { name: 'زبان تخصصی', coef: 4 },
+      { name: 'هوش و استعداد معلمی', coef: 3 },
+      { name: 'تعلیم و تربیت اسلامی', coef: 2 },
     ],
   },
 };
