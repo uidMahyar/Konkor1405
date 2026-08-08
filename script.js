@@ -235,12 +235,23 @@ function renderExamList() {
         <span class="exam-card-meta">${SUBJECT_PRESETS[exam.type].label} · ${faNum(totalQ)} سوال · ${dateStr}</span>
       </div>
       ${scoreHtml}
+      <button class="exam-card-edit" aria-label="تغییر نام آزمون" type="button">✐</button>
       <button class="exam-card-del" aria-label="حذف آزمون" type="button">✕</button>
     `;
 
     card.addEventListener('click', (e) => {
-      if (e.target.closest('.exam-card-del')) return;
+      if (e.target.closest('.exam-card-del') || e.target.closest('.exam-card-edit')) return;
       openExam(exam.id);
+    });
+    card.querySelector('.exam-card-edit').addEventListener('click', (e) => {
+      e.stopPropagation();
+      const newName = prompt('نام جدید آزمون:', exam.name);
+      if (newName === null) return; // انصراف
+      const trimmed = newName.trim();
+      if (!trimmed) return;
+      exam.name = trimmed;
+      saveExams();
+      renderExamList();
     });
     card.querySelector('.exam-card-del').addEventListener('click', (e) => {
       e.stopPropagation();
@@ -630,6 +641,64 @@ function renderResults() {
 }
 
 /* ============================================================
+   Practice sheet — برگه تمرین
+   وضعیت هر درس روی خودِ exam ذخیره می‌شه (کلید = ایندکس درس در exam.subjects)
+   با toggle: زدن دوباره‌ی همون دکمه → برگشت به حالت خنثی
+   ============================================================ */
+function setPracticeState(exam, idx, state) {
+  if (!exam.practiceStatus) exam.practiceStatus = {};
+  const current = exam.practiceStatus[idx];
+  if (current === state) {
+    delete exam.practiceStatus[idx]; // زدن دوباره‌ی همون دکمه → برگشت به خنثی
+  } else {
+    exam.practiceStatus[idx] = state;
+  }
+  saveExams();
+}
+
+function renderPractice() {
+  const exam = getCurrentExam();
+  if (!exam) return;
+  document.getElementById('practice-exam-name').textContent = exam.name;
+  if (!exam.practiceStatus) exam.practiceStatus = {};
+
+  const grid = document.getElementById('practice-grid');
+  grid.innerHTML = '';
+  const subjects = exam.subjects || [];
+  const isOdd = subjects.length % 2 === 1;
+
+  subjects.forEach((sub, idx) => {
+    const state = exam.practiceStatus[idx]; // undefined | 'progress' | 'complete'
+    const card = document.createElement('div');
+    card.className = 'practice-card' + (state ? ` state-${state}` : '') + (isOdd && idx === subjects.length - 1 ? ' span-full' : '');
+    card.innerHTML = `
+      <div class="practice-card-top">
+        <div class="practice-card-name-row">
+          <span class="practice-card-name">${sub.name}</span>
+          <span class="practice-card-icon icon-progress">◐</span>
+          <span class="practice-card-icon icon-complete">✓</span>
+        </div>
+        <span class="practice-card-coef">ضریب ${faNum(sub.coef)}</span>
+      </div>
+      <div class="practice-card-actions">
+        <button class="practice-btn btn-progress${state === 'progress' ? ' is-active' : ''}" data-idx="${idx}" data-state="progress">در حال تمرین</button>
+        <button class="practice-btn btn-complete${state === 'complete' ? ' is-active' : ''}" data-idx="${idx}" data-state="complete">تکمیل</button>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+
+  grid.querySelectorAll('.practice-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = Number(btn.dataset.idx);
+      const state = btn.dataset.state;
+      setPracticeState(exam, idx, state);
+      renderPractice();
+    });
+  });
+}
+
+/* ============================================================
    Review — full per-question answer list, color-coded
    (سبز=درست، قرمز=غلط، زرد=بی‌پاسخ — همون قالب صفحه‌ی ثبت پاسخ)
    ============================================================ */
@@ -684,6 +753,16 @@ document.getElementById('btn-view-review').addEventListener('click', () => {
 });
 
 document.getElementById('btn-review-back').addEventListener('click', () => {
+  renderResults();
+  showScreen('screen-results');
+});
+
+document.getElementById('btn-view-practice').addEventListener('click', () => {
+  renderPractice();
+  showScreen('screen-practice');
+});
+
+document.getElementById('btn-practice-back').addEventListener('click', () => {
   renderResults();
   showScreen('screen-results');
 });
