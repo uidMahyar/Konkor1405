@@ -16,6 +16,7 @@
   <!-- ================= HOME ================= -->
   <section id="screen-home" class="screen active">
     <header class="topbar">
+      <img src="pic/logo.png" alt="لوگوی پاسخ‌برگ" class="brand-logo">
       <h1 class="brand">پاسخ‌برگ<span class="brand-mark">دفتر تصحیح آزمون‌های کنکور</span></h1>
     </header>
 
@@ -141,11 +142,32 @@
 
       <div class="results-actions">
         <button id="btn-view-review" class="btn btn-secondary btn-block">لیست پاسخ‌ها</button>
+        <button id="btn-view-practice" class="btn btn-secondary btn-block">تمرین دروس</button>
         <div class="results-actions-row">
           <button id="btn-edit-answers" class="btn btn-ghost">ویرایش پاسخ‌ها</button>
           <button id="btn-edit-key" class="btn btn-ghost">ویرایش کلید</button>
         </div>
       </div>
+    </div>
+  </section>
+
+  <!-- ================= PRACTICE (per-subject study status, 2-column grid) ================= -->
+  <section id="screen-practice" class="screen">
+    <header class="topbar topbar-nav">
+      <button class="btn-icon" id="btn-practice-back" aria-label="بازگشت به کارنامه">‹</button>
+      <div class="screen-title-wrap">
+        <h2 class="screen-title">برگه تمرین</h2>
+        <span class="screen-subtitle" id="practice-exam-name"></span>
+      </div>
+      <span class="topbar-spacer"></span>
+    </header>
+
+    <div class="practice-body">
+      <div class="practice-legend">
+        <span class="practice-legend-item"><span class="practice-legend-dot progress"></span>در حال تمرین</span>
+        <span class="practice-legend-item"><span class="practice-legend-dot complete"></span>تکمیل</span>
+      </div>
+      <div id="practice-grid" class="practice-grid"><!-- filled by JS --></div>
     </div>
   </section>
 
