@@ -87,7 +87,7 @@
   <!-- ================= SHEET (answers / key, shared) ================= -->
   <section id="screen-sheet" class="screen">
     <header class="topbar topbar-nav">
-      <button class="btn-icon" data-nav="home" aria-label="بازگشت به خانه">‹</button>
+      <button class="btn-icon" id="btn-sheet-home" aria-label="بازگشت">‹</button>
       <div class="screen-title-wrap">
         <h2 class="screen-title" id="sheet-title">ثبت پاسخ‌ها</h2>
         <span class="screen-subtitle" id="sheet-exam-name"></span>
@@ -109,9 +109,12 @@
 
     <div id="sheet-grid" class="sheet-grid"><!-- filled by JS, grouped by subject --></div>
 
-    <div class="sheet-footer">
+    <div id="sheet-footer-normal" class="sheet-footer">
       <button id="btn-sheet-back" class="btn btn-ghost">قبلی</button>
       <button id="btn-sheet-next" class="btn btn-primary">بعدی</button>
+    </div>
+    <div id="sheet-footer-practice" class="sheet-footer" hidden>
+      <button id="btn-sheet-practice-done" class="btn btn-primary btn-block">بازگشت به برگه تمرین</button>
     </div>
   </section>
 
