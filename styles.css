@@ -405,7 +405,7 @@ button, input {
 .opt.selected { background: var(--navy); border-color: var(--navy); color: var(--paper-raised); font-weight: 700; }
 .opt.selected.completed { background: var(--practice-complete); border-color: var(--practice-complete); }
 .opt.opt-readonly { cursor: default; }
-.opt.opt-readonly:hover { border-color: var(--line); }
+.opt.opt-readonly:hover:not(.opt-correct):not(.opt-wrong):not(.opt-correct-outline):not(.opt-blank-correct) { border-color: var(--line); }
 
 /* key-mode correctness paint (only meaningful once answers exist too, used in edit-key context is same as edit) */
 .opt.key-selected { background: var(--gold); border-color: var(--gold); color: #fff; font-weight: 700; }
@@ -421,7 +421,7 @@ button, input {
   border-bottom: 1px solid var(--line-soft);
 }
 .qrow-practice-wrap:last-child { border-bottom: none; }
-.qrow-practice-wrap .qrow { padding: 0; }
+.qrow-practice-wrap .qrow:not(.qrow-blank) { padding: 0; }
 
 .btn-complete-q {
   align-self: flex-end;
