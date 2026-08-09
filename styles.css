@@ -391,6 +391,7 @@ button, input {
 .qrow-options { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; direction: ltr; }
 
 .opt {
+  display: block;
   border: 1px solid var(--line);
   background: var(--paper-raised);
   border-radius: var(--radius-s);
@@ -402,9 +403,45 @@ button, input {
 }
 .opt:hover { border-color: var(--navy-soft); }
 .opt.selected { background: var(--navy); border-color: var(--navy); color: var(--paper-raised); font-weight: 700; }
+.opt.selected.completed { background: var(--practice-complete); border-color: var(--practice-complete); }
+.opt.opt-readonly { cursor: default; }
+.opt.opt-readonly:hover { border-color: var(--line); }
 
 /* key-mode correctness paint (only meaningful once answers exist too, used in edit-key context is same as edit) */
 .opt.key-selected { background: var(--gold); border-color: var(--gold); color: #fff; font-weight: 700; }
+
+/* ============================================================
+   Practice sheet mode — سطرِ سوال با دکمه‌ی «تکمیل» زیرش
+   ============================================================ */
+.qrow-practice-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+.qrow-practice-wrap:last-child { border-bottom: none; }
+.qrow-practice-wrap .qrow { padding: 0; }
+
+.btn-complete-q {
+  align-self: flex-end;
+  margin-inline-start: 40px;
+  padding: 5px 16px;
+  border-radius: 20px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink-soft);
+  font-family: 'Vazirmatn', sans-serif;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-complete-q.is-active {
+  background: var(--practice-complete);
+  border-color: var(--practice-complete);
+  color: var(--paper-raised);
+}
+
 
 .sheet-footer {
   display: flex;
@@ -545,6 +582,14 @@ button, input {
 .practice-card-top { display: flex; flex-direction: column; gap: 6px; }
 .practice-card-name-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 6px; }
 .practice-card-name { font-weight: 700; font-size: 14px; line-height: 1.4; }
+.practice-card-name-link {
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-decoration-color: var(--line);
+  text-underline-offset: 3px;
+}
+.practice-card-name-link:hover { text-decoration-color: currentColor; }
 .practice-card-icon { font-size: 15px; opacity: 0; transform: scale(0.6); transition: opacity 0.2s ease, transform 0.2s ease; }
 .practice-card-coef {
   align-self: flex-start;
