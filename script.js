@@ -83,6 +83,7 @@ let editingExisting = false;
 let timerInterval = null;
 let bellWatcherInterval = null;
 let endBellAudio = null;
+let sheetPracticeSubjectIdx = null; // null = پاسخنامه‌ی کامل؛ عدد = محدود به همون درسِ برگه‌ی تمرین
 
 function getCurrentExam() {
   return exams.find(e => e.id === currentExamId) || null;
@@ -268,6 +269,7 @@ function renderExamList() {
 
 function openExam(id) {
   currentExamId = id;
+  sheetPracticeSubjectIdx = null;
   const exam = getCurrentExam();
   const keyedCount = Object.keys(exam.key || {}).length;
   if (keyedCount > 0) {
@@ -419,6 +421,7 @@ document.getElementById('btn-start-sheet').addEventListener('click', () => {
   }
   saveExams();
 
+  sheetPracticeSubjectIdx = null;
   sheetMode = 'answers';
   renderSheet();
   showScreen('screen-sheet');
@@ -428,22 +431,47 @@ document.getElementById('btn-edit-setup').addEventListener('click', () => {
   openSetup(getCurrentExam());
 });
 
+document.getElementById('btn-sheet-home').addEventListener('click', () => {
+  if (sheetPracticeSubjectIdx !== null) {
+    sheetPracticeSubjectIdx = null;
+    renderPractice();
+    showScreen('screen-practice');
+  } else {
+    renderExamList();
+    showScreen('screen-home');
+  }
+});
+
+document.getElementById('btn-sheet-practice-done').addEventListener('click', () => {
+  sheetPracticeSubjectIdx = null;
+  renderPractice();
+  showScreen('screen-practice');
+});
+
 /* ============================================================
    Sheet screen (answers / key — shared renderer)
    ============================================================ */
 function renderSheet() {
   const exam = getCurrentExam();
   if (!exam) return;
+  const practiceMode = sheetPracticeSubjectIdx !== null;
+  const practiceSubject = practiceMode ? exam.subjects[sheetPracticeSubjectIdx] : null;
 
   document.getElementById('sheet-exam-name').textContent = exam.name;
-  document.getElementById('sheet-title').textContent = sheetMode === 'answers' ? 'ثبت پاسخ‌های شما' : 'ثبت کلید سوالات';
+  document.getElementById('sheet-title').textContent = practiceMode
+    ? `تمرین: ${practiceSubject.name}`
+    : (sheetMode === 'answers' ? 'ثبت پاسخ‌های شما' : 'ثبت کلید سوالات');
   document.getElementById('btn-sheet-back').textContent = sheetMode === 'answers' ? 'بازگشت' : 'مرحله قبل';
   document.getElementById('btn-sheet-next').textContent = sheetMode === 'answers' ? 'بعدی: ثبت کلید' : 'مشاهده کارنامه';
   document.getElementById('bulk-input').value = '';
+  document.querySelector('.bulkfill').hidden = practiceMode;
+  document.querySelector('.bulk-hint').hidden = practiceMode;
+  document.getElementById('sheet-footer-normal').hidden = practiceMode;
+  document.getElementById('sheet-footer-practice').hidden = !practiceMode;
 
   stopTimerInterval();
   const timerWrap = document.getElementById('sheet-timer');
-  if (sheetMode === 'answers' && exam.durationMinutes > 0) {
+  if (!practiceMode && sheetMode === 'answers' && exam.durationMinutes > 0) {
     if (!exam.timerStartedAt) {
       exam.timerStartedAt = Date.now();
       exam.bellPlayed = false;
@@ -459,9 +487,12 @@ function renderSheet() {
 
   const grid = document.getElementById('sheet-grid');
   grid.innerHTML = '';
-  const dataStore = sheetMode === 'answers' ? exam.answers : exam.key;
+  const dataStore = practiceMode ? exam.answers : (sheetMode === 'answers' ? exam.answers : exam.key);
+  if (!exam.completedQuestions) exam.completedQuestions = {};
 
-  exam.subjects.forEach(sub => {
+  const subjectsToRender = practiceMode ? [practiceSubject] : exam.subjects;
+
+  subjectsToRender.forEach(sub => {
     const group = document.createElement('div');
     group.className = 'subject-group';
     const titleEl = document.createElement('div');
@@ -471,30 +502,77 @@ function renderSheet() {
 
     for (let q = sub.start; q <= sub.end; q++) {
       const row = document.createElement('div');
-      row.className = 'qrow';
       const selected = dataStore[q];
-      row.innerHTML = `
-        <span class="qrow-num">${faNum(q)}</span>
-        <span class="qrow-options">
-          ${[1, 2, 3, 4].map(opt => `<button type="button" class="opt${selected === opt ? ' selected' : ''}" data-q="${q}" data-opt="${opt}">${faNum(opt)}</button>`).join('')}
-        </span>
-      `;
+      const isCompleted = !!exam.completedQuestions[q];
+
+      if (practiceMode) {
+        row.className = 'qrow-practice-wrap';
+        row.innerHTML = `
+          <div class="qrow">
+            <span class="qrow-num">${faNum(q)}</span>
+            <span class="qrow-options">
+              ${[1, 2, 3, 4].map(opt => `<span class="opt opt-readonly${selected === opt ? ' selected' : ''}${selected === opt && isCompleted ? ' completed' : ''}">${faNum(opt)}</span>`).join('')}
+            </span>
+          </div>
+          <button type="button" class="btn-complete-q${isCompleted ? ' is-active' : ''}" data-complete-q="${q}">${isCompleted ? '✓ تکمیل شد' : 'تکمیل'}</button>
+        `;
+      } else {
+        row.className = 'qrow';
+        row.innerHTML = `
+          <span class="qrow-num">${faNum(q)}</span>
+          <span class="qrow-options">
+            ${[1, 2, 3, 4].map(opt => `<button type="button" class="opt${selected === opt ? ' selected' : ''}" data-q="${q}" data-opt="${opt}">${faNum(opt)}</button>`).join('')}
+          </span>
+        `;
+      }
       group.appendChild(row);
     }
     grid.appendChild(group);
   });
 
-  grid.querySelectorAll('.opt').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const q = Number(btn.dataset.q);
-      const opt = Number(btn.dataset.opt);
-      const store = sheetMode === 'answers' ? exam.answers : exam.key;
-      if (store[q] === opt) delete store[q];
-      else store[q] = opt;
-      saveExams();
-      renderSheet();
+  if (!practiceMode) {
+    grid.querySelectorAll('.opt').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const q = Number(btn.dataset.q);
+        const opt = Number(btn.dataset.opt);
+        const store = sheetMode === 'answers' ? exam.answers : exam.key;
+        if (store[q] === opt) delete store[q];
+        else store[q] = opt;
+        saveExams();
+        renderSheet();
+      });
     });
-  });
+  }
+
+  if (practiceMode) {
+    grid.querySelectorAll('.btn-complete-q').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const q = Number(btn.dataset.completeQ);
+        if (exam.completedQuestions[q]) delete exam.completedQuestions[q];
+        else exam.completedQuestions[q] = true;
+        syncSubjectPracticeCompletion(exam, sheetPracticeSubjectIdx);
+        saveExams();
+        renderSheet();
+      });
+    });
+  }
+}
+
+/* اگه همه‌ی سوال‌های بازه‌ی این درس «تکمیل» شده باشن، وضعیت درس تو برگه‌ی تمرین خودکار میشه «تکمیل» */
+function syncSubjectPracticeCompletion(exam, subjectIdx) {
+  const sub = exam.subjects[subjectIdx];
+  if (!sub) return;
+  let allDone = true;
+  for (let q = sub.start; q <= sub.end; q++) {
+    if (!exam.completedQuestions[q]) { allDone = false; break; }
+  }
+  if (!exam.practiceStatus) exam.practiceStatus = {};
+  if (allDone) {
+    exam.practiceStatus[subjectIdx] = 'complete';
+  } else if (exam.practiceStatus[subjectIdx] === 'complete') {
+    // یکی از سوالا از تکمیل خارج شد؛ دیگه کل درس تکمیل نیست — برمی‌گرده به «در حال تمرین»
+    exam.practiceStatus[subjectIdx] = 'progress';
+  }
 }
 
 document.getElementById('btn-bulk-apply').addEventListener('click', applyBulk);
@@ -674,7 +752,7 @@ function renderPractice() {
     card.innerHTML = `
       <div class="practice-card-top">
         <div class="practice-card-name-row">
-          <span class="practice-card-name">${sub.name}</span>
+          <span class="practice-card-name practice-card-name-link" data-idx="${idx}" role="button" tabindex="0">${sub.name}</span>
           <span class="practice-card-icon icon-progress">◐</span>
           <span class="practice-card-icon icon-complete">✓</span>
         </div>
@@ -696,6 +774,20 @@ function renderPractice() {
       renderPractice();
     });
   });
+
+  grid.querySelectorAll('.practice-card-name-link').forEach(el => {
+    el.addEventListener('click', () => openPracticeSheet(Number(el.dataset.idx)));
+    el.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openPracticeSheet(Number(el.dataset.idx)); }
+    });
+  });
+}
+
+function openPracticeSheet(subjectIdx) {
+  sheetPracticeSubjectIdx = subjectIdx;
+  sheetMode = 'answers';
+  renderSheet();
+  showScreen('screen-sheet');
 }
 
 /* ============================================================
@@ -768,11 +860,13 @@ document.getElementById('btn-practice-back').addEventListener('click', () => {
 });
 
 document.getElementById('btn-edit-answers').addEventListener('click', () => {
+  sheetPracticeSubjectIdx = null;
   sheetMode = 'answers';
   renderSheet();
   showScreen('screen-sheet');
 });
 document.getElementById('btn-edit-key').addEventListener('click', () => {
+  sheetPracticeSubjectIdx = null;
   sheetMode = 'key';
   renderSheet();
   showScreen('screen-sheet');
