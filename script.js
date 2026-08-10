@@ -1,5 +1,17 @@
 'use strict';
 
+/* ······························································
+ ·                                                              ·
+ ·     ████  █████   ███    ███   █   █   ███   █   █  █████    ·
+ ·    █        █    █   █  █   █  ██  █  █   █  ██  █    █      ·
+ ·    █        █    █   █  █      █ █ █  █   █  █ █ █    █      ·
+ ·     ███     █    █████  █  ██  █ █ █  █████  █ █ █    █      ·
+ ·        █    █    █   █  █   █  █  ██  █   █  █  ██    █      ·
+ ·        █    █    █   █  █   █  █   █  █   █  █   █    █      ·
+ ·    ████     █    █   █   ████  █   █  █   █  █   █    █      ·
+ ·                                                              ·
+ ······························································ */
+
 /* ============================================================
    Data: subject presets with official coefficients (انسانی)
    ============================================================ */
@@ -213,7 +225,8 @@ function renderExamList() {
 
   [...exams].sort((a, b) => b.createdAt - a.createdAt).forEach(exam => {
     const card = document.createElement('div');
-    card.className = 'exam-card';
+    const practiceDone = isExamPracticeFullyComplete(exam);
+    card.className = 'exam-card' + (practiceDone ? ' exam-card-practice-done' : '');
 
     const totalQ = exam.subjects.reduce((s, sub) => s + sub.count, 0);
     const answeredCount = Object.keys(exam.answers || {}).length;
@@ -590,6 +603,13 @@ function syncSubjectPracticeCompletion(exam, subjectIdx) {
   }
 }
 
+/* آیا همه‌ی دروسِ این آزمون تو برگه‌ی تمرین «تکمیل» شدن؟ (برای رنگِ آبیِ کارتِ خونه) */
+function isExamPracticeFullyComplete(exam) {
+  if (!exam.subjects || exam.subjects.length === 0) return false;
+  if (!exam.practiceStatus) return false;
+  return exam.subjects.every((sub, idx) => exam.practiceStatus[idx] === 'complete');
+}
+
 document.getElementById('btn-bulk-apply').addEventListener('click', applyBulk);
 document.getElementById('bulk-input').addEventListener('keydown', (e) => {
   if (e.key === 'Enter') { e.preventDefault(); applyBulk(); }
@@ -893,4 +913,3 @@ document.getElementById('btn-edit-key').addEventListener('click', () => {
 renderExamList();
 showScreen('screen-home');
 startBellWatcher();
-
