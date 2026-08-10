@@ -1,3 +1,15 @@
+/* ······························································
+ ·                                                              ·
+ ·     ████  █████   ███    ███   █   █   ███   █   █  █████    ·
+ ·    █        █    █   █  █   █  ██  █  █   █  ██  █    █      ·
+ ·    █        █    █   █  █      █ █ █  █   █  █ █ █    █      ·
+ ·     ███     █    █████  █  ██  █ █ █  █████  █ █ █    █      ·
+ ·        █    █    █   █  █   █  █  ██  █   █  █  ██    █      ·
+ ·        █    █    █   █  █   █  █   █  █   █  █   █    █      ·
+ ·    ████     █    █   █   ████  █   █  █   █  █   █    █      ·
+ ·                                                              ·
+ ······························································ */
+
 /* ============================================================
    پاسخ‌برگ — design tokens
    ============================================================ */
@@ -234,6 +246,21 @@ button, input {
 }
 .exam-card-edit:hover { background: var(--line-soft); color: var(--navy); }
 
+/* آزمونی که همه‌ی دروسش تو برگه‌ی تمرین «تکمیل» شده — پس‌زمینه‌ی کاملِ آبی، هم‌رنگِ کارتِ تکمیل‌شده‌ی صفحه‌ی تمرین */
+.exam-card.exam-card-practice-done {
+  background: var(--practice-complete);
+  border-color: var(--practice-complete);
+}
+.exam-card.exam-card-practice-done:hover { border-color: var(--practice-complete); }
+.exam-card.exam-card-practice-done .exam-card-name { color: var(--paper-raised); }
+.exam-card.exam-card-practice-done .exam-card-meta { color: rgba(255,255,255,0.72); }
+.exam-card.exam-card-practice-done .exam-card-score { color: var(--paper-raised); }
+.exam-card.exam-card-practice-done .exam-card-score.pending { color: rgba(255,255,255,0.85); }
+.exam-card.exam-card-practice-done .exam-card-del,
+.exam-card.exam-card-practice-done .exam-card-edit { color: rgba(255,255,255,0.75); }
+.exam-card.exam-card-practice-done .exam-card-del:hover { background: rgba(255,255,255,0.15); color: #fff; }
+.exam-card.exam-card-practice-done .exam-card-edit:hover { background: rgba(255,255,255,0.15); color: #fff; }
+
 .empty-state {
   text-align: center;
   color: var(--ink-soft);
@@ -307,8 +334,10 @@ button, input {
    Sheet (answers / key)
    ============================================================ */
 .bulkfill { display: flex; gap: 8px; padding: 16px 20px 0; }
+.bulkfill[hidden] { display: none; }
 .bulkfill .input { flex: 1; }
 .bulk-hint { font-size: 11.5px; color: var(--ink-soft); padding: 6px 20px 4px; }
+.bulk-hint[hidden] { display: none; }
 
 /* ============================================================
    Sheet timer
@@ -448,6 +477,7 @@ button, input {
   gap: 10px;
   padding: 22px 20px 4px;
 }
+.sheet-footer[hidden] { display: none; }
 .sheet-footer .btn { flex: 1; }
 
 /* ============================================================
