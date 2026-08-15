@@ -42,16 +42,16 @@ const SUBJECT_PRESETS = {
       { name: 'جغرافیا', coef: 5 },
       { name: 'فلسفه و منطق', coef: 5 },
       { name: 'اقتصاد', coef: 2 },
+      { name: ' تعلیم و تربیت اسلامی', coef: 2 },
       { name: 'هوش و استعداد معلمی', coef: 3 },
-      { name: 'تعلیم و تربیت اسلامی', coef: 2 },
     ],
   },
   zaban: {
     label: 'زبان',
     subjects: [
       { name: 'زبان تخصصی', coef: 4 },
+      { name: ' تعلیم و تربیت اسلامی', coef: 2 },
       { name: 'هوش و استعداد معلمی', coef: 3 },
-      { name: 'تعلیم و تربیت اسلامی', coef: 2 },
     ],
   },
 };
